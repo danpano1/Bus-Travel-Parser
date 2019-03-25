@@ -1,6 +1,7 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
 
+
 class Neobus {
     static async getPossibleStartStations(){
         let neobusHtml = {};
@@ -71,6 +72,12 @@ class Neobus {
     static async getTravelPossibilities(startStation, endStation, travelOpts){
         let jsonTravelData = '';
         let neobusData = {}
+        let divsWithProperData = [];
+
+        const travelDateUserWantTo = travelOpts.date.split('.')
+        const userTravelDateProperForm = `${travelDateUserWantTo[2]}-${travelDateUserWantTo[1]}-${travelDateUserWantTo[0]}`
+
+        const travelsToShow = [];
 
         jsonTravelData = await request.post(
             this.page, 
@@ -79,7 +86,7 @@ class Neobus {
                     ajax: true,
                     dataType: 'json',
                     module: 'neotickets',
-                    type: 'data',
+                    step: 1,                   
                     ticket_type: travelOpts.ticketType,
                     date_there: travelOpts.date,
                     passengers: travelOpts.passengers,
@@ -88,9 +95,32 @@ class Neobus {
         }})
 
         neobusData = JSON.parse(jsonTravelData)
-        
-        console.log(neobusData)
 
+        const $ = cheerio.load(neobusData.neotickets.html)
+
+        divsWithProperData = $('.route').toArray().forEach((route) =>{
+            
+            if(route.children[1].attribs && route.children[3].attribs){
+                const travelDate = route.children[1].attribs.value
+                const travelDateTimeAndDaySeparated = travelDate.split(' ')      
+               
+               
+                
+                if(travelDateTimeAndDaySeparated[0]===userTravelDateProperForm) {
+                    travelsToShow.push({
+                        departureDate: route.children[1].attribs.value,
+                        arrivalDate:  route.children[3].attribs.value,
+                        price: $(route).find($(('.price'))).text()
+                    })
+                }
+            }
+        })
+
+        
+        
+        console.log(travelsToShow)
+        return travelsToShow
+  
     }
     
 }   
@@ -102,7 +132,7 @@ Neobus.getTravelPossibilities(
         stopId: '47'
     },
     endStation={
-    stopId: '71'
+    stopId: '85'
 },  
 travelOpts = {
     ticketType: 'student',
