@@ -19,7 +19,6 @@ module.exports = (nameOfStartStation, nameOfEndStation, possibleStations) => {
             name: station.name
             })
         }
-    })
-    
+    })    
     return stationsFinded
 }

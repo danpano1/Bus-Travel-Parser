@@ -1,7 +1,5 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
-const findStationsByName = require('./utils/findStationsByName')
-
 
 class Neobus {
     static async getPossibleStations(){
@@ -85,7 +83,8 @@ class Neobus {
                             arrivalStation: endStation.name,
                             departureDate: properDepartureFormat,
                             arrivalDate:  properArrivalFormat,
-                            price: $(route).find($(('.price'))).text()
+                            price: $(route).find($(('.price'))).text(),
+                            service: 'Neobus'
                         })
                     }
                 }
@@ -99,46 +98,17 @@ class Neobus {
 
     return travelsToShow
   
-    }
-
-    static async getAllPossibleConnections(startStation, endStation, travelOpts){    
-
-        const possibleStations = await this.getPossibleStations()
-            
-        const findedStations = findStationsByName(startStation, endStation, possibleStations)
-            
-        const allPossibleConnections = []
-        const parrarelPromises = [];
-            
-        for(let i = 0; i<findedStations.start.length; i++){
-            for(let j = 0; j<findedStations.end.length; j++){
-                    
-                parrarelPromises.push(               
-                    this.getTravelConnection(findedStations.start[i], findedStations.end[j],  travelOpts)
-                    .then(connection=>{
-                        connection.forEach(connectionPossibility=>{
-                            allPossibleConnections.push(connectionPossibility)                    
-                    })
-                }))  
-            }        
-        }
-        
-        await Promise.all(parrarelPromises)
-        
-        console.log(allPossibleConnections)
-        return allPossibleConnections
-        
-    }
+    }   
     
 }   
 
 Neobus.page = 'https://neobus.pl/'
+module.exports = Neobus;
 
-
-Neobus.getAllPossibleConnections('', 'warszawa', {
-    ticketType: 'student',
-    passengers: '1',
-    date: '30.03.2019',
-    time: '11:00'
-})
+// Neobus.getAllPossibleConnections('Ostrowiec', 'Warszawa', {
+//     ticketType: 'student',
+//     passengers: '1',
+//     date: '30.03.2019',
+//     time: '11:00'
+// })
 

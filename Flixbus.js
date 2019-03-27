@@ -1,6 +1,6 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
-const fs = require('fs')
+
 class Flixbus{
     static async getPossibleStations(){
 
@@ -14,7 +14,7 @@ class Flixbus{
             if (allCities[city].countryCode === 'PL'){
                 citiesFromPoland.push({
                     id: allCities[city].id,
-                    name: allCities[city].name
+                    name: allCities[city].name.toLowerCase()
                 })
             }
         }
@@ -22,7 +22,7 @@ class Flixbus{
         return citiesFromPoland
     }
 
-        static async getAllPossibleConnections(startCity, endCity, travelOpts){
+        static async getTravelConnection(startCity, endCity, travelOpts){
             let $ = {};
             let travelPossibilities = [];
 
@@ -65,28 +65,27 @@ class Flixbus{
                         arrivalStation: endPoint,
                         departureDate: `${travelOpts.date} ${departureTime}`,
                         arrivalDate: `${arrivalDate} ${arrivalTime}`,
-                        price: price
+                        price: price,
+                        service: 'Flixbus'
                     })
                 }
             })
         } catch(err) {
             console.log(err)
-        }
-
-        console.log(travelPossibilities)
+        }        
         return travelPossibilities
-
-        }
-        
+    }  
 }
 
 Flixbus.citiesJsonUrl = 'https://d11mb9zho2u7hy.cloudfront.net/api/v1/cities?locale=pl'
+// const travelOpts = {
+//     date: '28.03.2019',
+//     time: '00:00',
+//     passengers: '1'
+// }
+// Flixbus.getTravelConnection({id: 18598}, {id: 7568}, travelOpts);
 
-Flixbus.getAllPossibleConnections({id: 18598}, {id: 7568}, {
-    date: '28.03.2019',
-    time: '00:00',
-    passengers: '1'
-});
+
 
 
 
