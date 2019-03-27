@@ -20,6 +20,6 @@ module.exports = (nameOfStartStation, nameOfEndStation, possibleStations) => {
             })
         }
     })
-    console.log(stationsFinded)
+    
     return stationsFinded
 }

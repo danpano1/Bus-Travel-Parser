@@ -1,6 +1,6 @@
 const request = require('request-promise');
 const cheerio = require('cheerio');
-
+const fs = require('fs')
 class Flixbus{
     static async getPossibleStations(){
 
@@ -22,48 +22,69 @@ class Flixbus{
         return citiesFromPoland
     }
 
-        static async getTravelPossibilities(startCityId, endCityId, travelOpts){
+        static async getAllPossibleConnections(startCity, endCity, travelOpts){
             let $ = {};
             let travelPossibilities = [];
 
             const requestOpts = {
-                uri: `https://shop.flixbus.pl/search?departureCity=${startCityId}&arrivalCity=${endCityId}&rideDate=${travelOpts.date}&adult=${travelOpts.passgengers}`,
+                uri: `https://shop.flixbus.pl/search?departureCity=${startCity.id}&arrivalCity=${endCity.id}&rideDate=${travelOpts.date}&adult=${travelOpts.passengers}`,
                 transform: function (body) {
                     return cheerio.load(body);
                 }
             }
-
+            try{
             $ = await request(requestOpts)
             
+            
             $('#results-group-container-direct').children().toArray().forEach(divWithTravels =>{
-                console.log('divWithTravels')
-                const departureTime = $(divWithTravels).find($('.departure')).text();
-                const arrivalTime = $(divWithTravels).find($('.arrival')).text();
+                let arrivalDate = travelOpts.date
 
-                const startPoint = $(divWithTravels).find($('.departure-station-name')).text();
-                const endPoint = $(divWithTravels).find($('.arrival-station-name')).text();
+                const departureTime = $($(divWithTravels).find($('.departure')).get(0)).text();
+                
+                if(departureTime>= travelOpts.time){
 
-                const price = $(divWithTravels).find($('span.num')).text();
+                    const arrivalTime = $($(divWithTravels).find($('.arrival')).get(0)).text();
+                    
+                    if(arrivalTime<departureTime){
 
+                        const arrayOfDate = arrivalDate.split('.')
 
-                travelPossibilities.push({
-                    departureStation: startPoint,
-                    arrivalStation: endPoint,
-                    departureDate: `${travelOpts.date} ${departureTime}`,
-                    arrivalDate: `${travelOpts.date} ${arrivalTime}`,
-                    price: price
-                })
+                        arrayOfDate[0]++
+
+                        arrivalDate = `${arrayOfDate[0]}.${arrayOfDate[1]}.${arrayOfDate[2]}`
+                    }               
+                    
+                    const startPoint = $($(divWithTravels).find($('.departure-station-name')).get(0)).text()
+                    const endPoint = $($(divWithTravels).find($('.arrival-station-name')).get(0)).text()
+
+                    const price = $($(divWithTravels).find($('span.num:not(.visible-sm-inline, visible-lg-inline)')).get(0)).text()                
+                
+
+                    travelPossibilities.push({
+                        departureStation: startPoint,
+                        arrivalStation: endPoint,
+                        departureDate: `${travelOpts.date} ${departureTime}`,
+                        arrivalDate: `${arrivalDate} ${arrivalTime}`,
+                        price: price
+                    })
+                }
             })
-            console.log(travelPossibilities)
-            return travelPossibilities
+        } catch(err) {
+            console.log(err)
+        }
+
+        console.log(travelPossibilities)
+        return travelPossibilities
+
         }
         
 }
 
 Flixbus.citiesJsonUrl = 'https://d11mb9zho2u7hy.cloudfront.net/api/v1/cities?locale=pl'
 
-Flixbus.getTravelPossibilities(18598, 7568, {
-    date: '29.03.2019',
+Flixbus.getAllPossibleConnections({id: 18598}, {id: 7568}, {
+    date: '28.03.2019',
+    time: '00:00',
     passengers: '1'
 });
 
