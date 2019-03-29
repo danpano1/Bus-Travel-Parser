@@ -1,4 +1,5 @@
-const findStationsByName = require('./findStationsByName')
+const findStationsByName = require('../utils/findStationsByName')
+const flatten = require('array-flatten')
 
 module.exports = async (startStation, endStation, travelOpts, arrayOfBusServiceClasses) => {
     let parrarelPromises = [];
@@ -38,7 +39,15 @@ module.exports = async (startStation, endStation, travelOpts, arrayOfBusServiceC
     })
     await Promise.all(parrarelPromises)            
     
-    console.log(allPossibleConnections)
-    return allPossibleConnections
+    
+
+    const flatAllPossibleConnection = flatten(allPossibleConnections)
+
+    flatAllPossibleConnection.sort((a, b)=>{
+        if(a.departureDate<b.departureDate) return -1
+        else return 1
+    })
+    
+    return flatAllPossibleConnection
     
 }
